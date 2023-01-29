@@ -1,0 +1,19 @@
+Checks:
+  '-*, 
+  bugprone*,
+  clang-analyzer*, 
+  cert*, 
+  cppcoreguidelines*, 
+  google*, 
+  hicpp*,
+  modernize*, 
+  misc*, 
+  readability*, -readability-identifier-length, 
+  style*,
+      
+  -*else-after-return,
+  -*readability-casting,
+  -*pro-type-reinterpret-cast,
+  -*magic-numbers,
+  -*avoid-c-arrays'
+
