@@ -27,13 +27,20 @@ constexpr auto char_width(char8_t ch) -> size_t {
   return CHAR_WIDTH[ch];
 }
 
-struct utf8_error {
+struct utf8_error : std::exception {
   size_t valid_to;
   std::optional<size_t> error_len;
+
+  utf8_error(size_t valid_to, std::optional<size_t> error_len) noexcept
+      : valid_to(valid_to), error_len(error_len) {}
+
+  [[nodiscard]] auto what() const noexcept -> const char* override {
+    return "invalid UTF-8, catch as `utf8_error` for more details";
+  }
 };
 
 // we don't need extra-fast algorithm because it is usually used only in consteval
-constexpr auto run_validation(std::string_view str) noexcept -> std::optional<utf8_error> {
+constexpr auto validate(std::string_view str) noexcept -> std::optional<utf8_error> {
   using some = std::optional<size_t>;
 
   auto idx = str.begin();
@@ -105,7 +112,7 @@ constexpr auto run_validation(std::string_view str) noexcept -> std::optional<ut
 }
 #undef ERROR
 
-consteval void run_const_validation(std::string_view str) {
+consteval void const_validate(std::string_view str) {
   auto idx = str.begin();
   while (idx != str.end()) {
     char8_t first = *idx;

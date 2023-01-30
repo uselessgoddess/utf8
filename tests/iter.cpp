@@ -113,7 +113,7 @@ TEST(bytes, raw_access) {
   utf8::string str = "С++∈🌏"sv;  // mutable-friendly string
 
   // `С` took 2 bytes - https://unicode-table.com/0421/
-  auto bytes = str.bytes_mut(utf8::unsafe).data();
+  auto bytes = str.data_mut(); // .bytes_mut(utf8::unsafe).data() as possible
   {
     bytes[0] = 0xF0;
     bytes[1] = 0x9F;

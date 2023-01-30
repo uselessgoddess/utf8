@@ -11,6 +11,12 @@ namespace utf8 {
     return string_view(*this).$name(std::forward<decltype(args)>(args)...);                       \
   }
 
+#define FROM_STR_MUT($name)                                                    \
+  [[nodiscard]] constexpr decltype(auto) $name(auto&&... args) noexcept(       \
+      noexcept(str_mut(*this).$name(std::forward<decltype(args)>(args)...))) { \
+    return str_mut(*this).$name(std::forward<decltype(args)>(args)...);        \
+  }
+
 template <typename Alloc = std::allocator<char>>
 struct basic_string {
   using std_string = std::basic_string<char, std::char_traits<char>, Alloc>;
@@ -24,10 +30,19 @@ struct basic_string {
   constexpr basic_string& operator=(basic_string&&) noexcept = default;
   constexpr basic_string& operator=(const basic_string&) noexcept = default;
 
-  constexpr explicit basic_string() noexcept : _inner(Alloc{}){};
-  // constexpr explicit basic_string(const Alloc& alloc = {}) noexcept : _inner(alloc){};
-  // constexpr basic_string(string_view str, const Alloc alloc) noexcept : _inner(str, alloc) {}
-  constexpr basic_string(string_view str) noexcept : _inner(str, Alloc{}) {}
+  constexpr explicit basic_string(Alloc alloc = {}) : _inner(alloc){};
+  constexpr basic_string(string_view str, Alloc alloc = {}) : _inner(str, alloc) {}
+  constexpr basic_string(noexport::unsafe_t, std::string_view str, Alloc alloc = {})
+      : _inner(str, alloc) {}
+
+  template <typename InputIt>
+  constexpr basic_string(InputIt iter, InputIt end, Alloc alloc = {}) : _inner(std_string(alloc)) {
+    _inner.reserve(std::distance(iter, end));  // size hint
+
+    for (; iter != end; iter++) {
+      push_back(*iter);
+    }
+  }
 
   constexpr operator std_string() const noexcept {
     return _inner;
@@ -45,6 +60,9 @@ struct basic_string {
     return {noexport::unsafe, std::string_view(_inner)};
   }
 
+  FROM_STR_MUT(data_mut)
+  FROM_STRING_VIEW(data)
+
   FROM_STRING_VIEW(empty)
   FROM_STRING_VIEW(size)
   FROM_STRING_VIEW(length)
@@ -54,7 +72,14 @@ struct basic_string {
   FROM_STRING_VIEW(is_boundary)
   FROM_STRING_VIEW(substr)
   FROM_STRING_VIEW(chars)
+  FROM_STRING_VIEW(char_indices)
   FROM_STRING_VIEW(bytes)
+  FROM_STRING_VIEW(find_first_of)
+  FROM_STRING_VIEW(find_first_not_of)
+  FROM_STRING_VIEW(find_last_of)
+  FROM_STRING_VIEW(find_last_not_of)
+  FROM_STRING_VIEW(starts_with)
+  FROM_STRING_VIEW(ends_with)
 
   [[nodiscard("iterators are lazy")]] constexpr auto bytes_mut(noexport::unsafe_t unsafe) noexcept
       -> bytes_mut_view {
@@ -162,60 +187,100 @@ struct basic_string {
     return append(str);
   }
 
-  // clang-format off
+  //// clang-format off
  private:
-  //using base::assign;
+  // using base::assign;
 
   //// Element access
-  //using base::at;
-  //using base::operator[];
-  //using base::back;
-  //using base::front;
-  //using base::operator std::string_view;
+  // using base::at;
+  // using base::operator[];
+  // using base::back;
+  // using base::front;
+  // using base::operator std::string_view;
 
   //// Iterators
 
-  //using base::begin; using base::end;
-  //using base::rbegin; using base::rend;
-  //using base::cbegin; using base::cend;
-  //using base::crbegin; using base::crend;
+  // using base::begin; using base::end;
+  // using base::rbegin; using base::rend;
+  // using base::cbegin; using base::cend;
+  // using base::crbegin; using base::crend;
 
   //// Operations
-  //using base::insert;
-  //using base::erase;
-  //using base::push_back;
-  //using base::append;
-  //using base::operator+=;
-  //using base::compare;
-  //using base::starts_with;
-  //using base::ends_with;
-  //using base::contains;
-  //using base::replace;
-  //using base::substr;
-  //using base::copy;
-  //using base::resize;
+  // using base::insert;
+  // using base::erase;
+  // using base::push_back;
+  // using base::append;
+  // using base::operator+=;
+  // using base::compare;
+  // using base::starts_with;
+  // using base::ends_with;
+  // using base::contains;
+  // using base::replace;
+  // using base::substr;
+  // using base::copy;
+  // using base::resize;
 
   //// Search
-  //using base::find;
-  //using base::rfind;
-  //using base::find_first_of;
-  //using base::find_first_not_of;
-  //using base::find_last_of;
-  //using base::find_last_not_of;
+  // using base::find;
+  // using base::rfind;
+  // using base::find_first_of;
+  // using base::find_first_not_of;
+  // using base::find_last_of;
+  // using base::find_last_not_of;
   //// clang-format on
 };
 
-template<typename Alloc>
+template <typename Alloc>
 auto operator+(basic_string<Alloc> string, char_t ch) {
   return std::move(string.append(ch));
 }
 
-template<typename Alloc>
+template <typename Alloc>
 auto operator+(basic_string<Alloc> string, string_view other) {
   return std::move(string.append(other));
 }
 
 using string = basic_string<>;
+
+constexpr auto parse(std::string_view str) -> string_view {
+  if (auto error = validate(str)) {
+    throw *error;
+  } else {
+    return {noexport::unsafe, str};
+  }
+}
+
+constexpr auto parse(noexport::unsafe_t unsafe, std::string_view str) -> string_view {
+  return {unsafe, str};
+}
+
+constexpr auto parse_lossy(std::string_view str) -> string {
+  string place;
+
+  while (true) {
+    // fixme: extract to char or string_view constant
+    constexpr string_view replacement = "\uFFFD";
+
+    if (auto error = validate(str)) {
+      auto [valid_to, error_len] = *error;
+      auto [valid, tail] = std::pair{str.substr(0, valid_to), str.substr(valid_to)};
+
+      place.append(string_view(noexport::unsafe, valid));
+      place.append(replacement);
+
+      if (error_len) {
+        str = tail.substr(*error_len);
+      } else {
+        return place;
+      }
+    } else {
+      place.append(string_view(noexport::unsafe, str));
+      return place;
+    }
+  }
+  // unreachable
+}
+
 }  // namespace utf8
 
 template <typename Alloc>

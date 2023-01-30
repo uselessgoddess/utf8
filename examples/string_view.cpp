@@ -12,7 +12,6 @@ int main() {
 
   std::cout << "size: " << str.size() << "\n";
   std::cout << "substr(7, 4):  `" << str.substr(4, 4) << "`\n";
-  std::cout << "slice_str(12, 16):  `" << str.slice_str(8, 12).value() << "`\n";
   std::cout << "find(`🏽👈`): `" << std::dec << str.find("🏽👈") << std::hex << "\n";
   for (char8_t ch : str.bytes()) {
     std::cout << "x" << size_t(ch) << " ";

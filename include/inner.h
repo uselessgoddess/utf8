@@ -146,9 +146,8 @@ class bytes_mut_view : public std::ranges::view_interface<bytes_mut_view> {
   char* _end;
 
  public:
-  // SAFETY: `str` must refer to mutable-friendly data
-  explicit constexpr bytes_mut_view(noexport::unsafe_t, std::string_view str) noexcept
-      : _begin(const_cast<char*>(str.begin())), _end(const_cast<char*>(str.end())) {}
+  explicit constexpr bytes_mut_view(noexport::unsafe_t, char* begin, char* end) noexcept
+      : _begin(begin), _end(end) {}
 
   [[nodiscard]] constexpr auto begin() const noexcept {
     return _begin;
@@ -175,7 +174,8 @@ constexpr auto basic_string_view<Q>::bytes() const noexcept {
 
 template <typename Q>
 constexpr auto basic_string_view<Q>::bytes_mut(noexport::unsafe_t) const noexcept mutable {
-  return bytes_mut_view(noexport::unsafe, _inner);
+  // SAFETY: `str` must refer to mutable-friendly data
+  return bytes_mut_view(noexport::unsafe, data_mut(), data_mut() + size());
 }
 
 template <size_t N>
@@ -185,7 +185,7 @@ consteval char_t::char_t(const char (&lit)[N]) noexcept {
   if (auto iter = chars.begin(); std::next(iter) == chars.end()) {
     inner = std::uint32_t(*iter);
   } else {
-    throw "allow only one UTF-8 character in string literal initialization of `char_t`";
+    throw "`char_t` from character literal may only contain one codepoint";
   }
 }
 

@@ -68,4 +68,16 @@ static auto operator<<(std::ostream& out, char_t ch) -> std::ostream& {
   return out.write(reinterpret_cast<const char*>(span.data()), span.size());
 }
 
+namespace literals {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wliteral-suffix"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wliteral-suffix"
+
+
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+}
+
 }  // namespace utf8

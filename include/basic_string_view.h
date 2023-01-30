@@ -41,12 +41,12 @@ class basic_string_view {
 
   consteval basic_string_view(noexport::unsafe_t, const char* str, size_t len) immutable
       : _inner(str, len) {
-    run_const_validation(std::string_view(str, len));
+    const_validate(std::string_view(str, len));
   }
 
   template <size_t N>
   consteval basic_string_view(const char (&lit)[N]) immutable : _inner(lit, N - 1) {
-    run_const_validation(std::string_view(lit, N - 1));
+    const_validate(std::string_view(lit, N - 1));
   }
 
   constexpr operator basic_string_view<immut>() const noexcept
@@ -140,7 +140,7 @@ class basic_string_view {
 
   [[nodiscard]] constexpr auto find_last_of(string_view str) const noexcept -> size_t;
 
-  [[nodiscard]] constexpr auto find_not_of(string_view str) const noexcept -> size_t;
+  [[nodiscard]] constexpr auto find_last_not_of(string_view str) const noexcept -> size_t;
 
   [[nodiscard]] constexpr auto starts_with(char_t ch) const noexcept -> bool;
 
