@@ -247,5 +247,6 @@ try {
   std::cout << "Valid up to: " << valid_to << " error len: " << error_len.value() << "\n";
 }
 
+// `H�l�� W��rl�!`
 std::cout << "Lossy: `" << utf8::parse_lossy(c_str) << "`\n";
 ```
