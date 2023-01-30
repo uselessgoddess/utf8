@@ -115,9 +115,9 @@ ASSERT_EQ(char_t("\u00e9"), *iter++);
 auto chars = utf8::string_view("é").chars();
 auto iter = chars.begin();
 // U+0065: 'latin small letter e'
-ASSERT_EQ(char_t("\u00e9"), *iter++);
+ASSERT_EQ(char_t("\u0065"), *iter++);
 // U+0301: 'combining acute accent'
-ASSERT_EQ(char_t("\u00e9"), *iter++);
+ASSERT_EQ(char_t("\u0301"), *iter++);
 ```
 
 ```c++
