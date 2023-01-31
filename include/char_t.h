@@ -49,10 +49,6 @@ struct char_t {
     return noexport::size_utf8(std::uint32_t(*this));
   }
 
-  [[nodiscard]] constexpr auto is_ascii() const noexcept -> bool {
-    return inner <= 0x7F;
-  }
-
   constexpr auto encode_utf8(std::span<char> dst) const -> str_mut {
     auto out = noexport::encode_utf8(std::uint32_t(*this), dst);
     return {noexport::unsafe, {out.data(), out.size()}};
@@ -75,9 +71,8 @@ namespace literals {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wliteral-suffix"
 
-
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
-}
+}  // namespace literals
 
 }  // namespace utf8

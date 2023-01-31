@@ -23,6 +23,9 @@ static_assert(std::numeric_limits<char8_t>::max() == (char8_t)char(-1),
 
 #include "inner.h"
 #include "basic_string.h"
+
+#include "is_ascii.h"
+#include "is_utf8.h"
 // clang-format on
 
 namespace utf8 {

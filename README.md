@@ -163,7 +163,7 @@ for (char_t ch : utf8::string_view("h🔥llo").chars()) {
 ```c++
 std::cout << std::hex;
 for (char8_t ch : utf8::string_view("h🔥llo").bytes()) {
-    if (char_t(ch).is_ascii()) { // or ch <= 0x7f 
+    if (utf8::is_ascii(ch)) { // or ch <= 0x7f 
         std::cout << "`" << char(ch) << "` ";
     } else {
         std::cout << size_t(ch) << " ";
