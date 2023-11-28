@@ -1,3 +1,5 @@
+#pragma once
+
 namespace utf8 {
 
 [[nodiscard]] constexpr auto is_ascii(char_t ch) noexcept -> bool {

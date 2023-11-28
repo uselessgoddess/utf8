@@ -16,6 +16,8 @@ static_assert(std::numeric_limits<char8_t>::max() == (char8_t)char(-1),
 #include "noexport/encode.h"
 #include "noexport/validation.h"
 
+#include "state.h"
+
 #include "basic_string_view.h"
 #include "char_t.h"
 
@@ -26,6 +28,10 @@ static_assert(std::numeric_limits<char8_t>::max() == (char8_t)char(-1),
 
 #include "is_ascii.h"
 #include "is_utf8.h"
+
+#include "to_ascii.h"
+
+#include "unicode/unicode.h"
 // clang-format on
 
 namespace utf8 {

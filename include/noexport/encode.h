@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>  // std::uint32_t | size_t
-#include <sstream>  // std::stringstream
-#include <span>  // std::span
+#include <format>   // std::format
+#include <span>     // std::span
 
 namespace utf8::noexport {
 
@@ -32,11 +32,9 @@ constexpr auto encode_utf8(std::uint32_t code, std::span<char> dst) -> std::span
   auto len = size_utf8(code);
 
   if (len > 4 || len > dst.size()) {
-    // can be use `.append`, but it too much
-    throw std::logic_error((std::stringstream()
-                            << "encode_utf8: need " << len << " bytes to encode U+" << std::hex
-                            << code << ", but the buffer has " << dst.size())
-                               .str());
+    throw std::logic_error(
+        std::format("encode_utf8: need {} bytes to encode U+{:x} code, but the buffer has {}", len,
+                    code, dst.size()));
   }
 
   switch (len) {

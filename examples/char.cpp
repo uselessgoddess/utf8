@@ -13,7 +13,7 @@ int main() {
   OUT(char_t("🦀") != char('C'));
 
   // wide characters from string literal
-  char_t ch = "\uD7FF";
+  auto ch = char_t("\uD7FF");
   // incorrect: static assertion
   /*
     char_t ch = "";
