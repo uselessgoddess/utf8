@@ -35,6 +35,9 @@ struct basic_string {
   constexpr basic_string(noexport::unsafe_t, std::string_view str, Alloc alloc = {})
       : _inner(str, alloc) {}
 
+  constexpr basic_string(noexport::unsafe_t, std::string str, Alloc alloc = {})
+      : _inner(std::move(str), alloc) {}
+
   template <typename InputIt>
   constexpr basic_string(InputIt iter, InputIt end, Alloc alloc = {}) : _inner(std_string(alloc)) {
     _inner.reserve(std::distance(iter, end));  // size hint
@@ -107,8 +110,7 @@ struct basic_string {
 
   constexpr auto _assert_boundary(size_t index) const {
     if (not is_boundary(index)) {
-      throw std::out_of_range(
-          (std::stringstream() << "index `" << index << "` is not UTF-8 char header").str());
+      throw std::out_of_range(std::format("index `{}` is not UTF-8 character point", index));
     }
   }
 
@@ -244,7 +246,7 @@ using string = basic_string<>;
 
 constexpr auto parse(std::string_view str) -> string_view {
   if (auto error = validate(str)) {
-    throw *error;
+    throw utf8_error(*error);
   } else {
     return {noexport::unsafe, str};
   }

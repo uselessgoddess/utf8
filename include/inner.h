@@ -178,9 +178,8 @@ constexpr auto basic_string_view<Q>::bytes_mut(noexport::unsafe_t) const noexcep
   return bytes_mut_view(noexport::unsafe, data_mut(), data_mut() + size());
 }
 
-template <size_t N>
-consteval char_t::char_t(const char (&lit)[N]) noexcept {
-  auto str = string_view(lit);
+consteval char_t::char_t(noexport::unsafe_t, std::string_view raw) {
+  auto str = string_view(noexport::unsafe, raw);
   auto chars = str.chars();
   if (auto iter = chars.begin(); std::next(iter) == chars.end()) {
     inner = std::uint32_t(*iter);
@@ -224,17 +223,33 @@ constexpr auto basic_string_view<Q>::find_first_not_of(string_view str) const no
 }
 
 template <typename Q>
+constexpr auto basic_string_view<Q>::find_last_of(string_view str) const noexcept -> size_t {
+  for (auto [idx, ch] : char_indices() | std::views::reverse) {
+    if (str.find(ch) != npos) {
+      return idx;
+    }
+  }
+  return npos;
+}
+
+template <typename Q>
+constexpr auto basic_string_view<Q>::find_last_not_of(string_view str) const noexcept -> size_t {
+  for (auto [idx, ch] : char_indices() | std::views::reverse) {
+    if (str.find(ch) == npos) {
+      return idx;
+    }
+  }
+  return npos;
+}
+
+template <typename Q>
 constexpr auto basic_string_view<Q>::starts_with(char_t ch) const noexcept -> bool {
-  char place[4] = {};
-  auto str = ch.encode_utf8(std::span(place));
-  return _inner.starts_with(str);
+  return _inner.starts_with(ch.encode_utf8(utf8::state_t{}));
 }
 
 template <typename Q>
 constexpr auto basic_string_view<Q>::ends_with(char_t ch) const noexcept -> bool {
-  char place[4] = {};
-  auto str = ch.encode_utf8(std::span(place));
-  return _inner.ends_with(str);
+  return _inner.ends_with(ch.encode_utf8(utf8::state_t{}));
 }
 
 }  // namespace utf8

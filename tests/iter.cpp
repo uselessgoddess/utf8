@@ -108,6 +108,7 @@ TEST(bytes, basic) {
 
 using namespace utf8::literals;
 
+#include <format>
 
 TEST(bytes, raw_access) {
   utf8::string str = "С++∈🌏"sv;  // mutable-friendly string
@@ -120,6 +121,8 @@ TEST(bytes, raw_access) {
     bytes[2] = 0xA6;
     bytes[3] = 0x80;
   }
+
+  char32_t const x = U'\uffff';
 
   ASSERT_EQ("🦀∈🌏"sv, str);
 }

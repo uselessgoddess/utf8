@@ -27,9 +27,18 @@ constexpr auto char_width(char8_t ch) -> size_t {
   return CHAR_WIDTH[ch];
 }
 
+// repr of `utf8_error`
+struct literal_error {
+  size_t valid_to;
+  std::optional<size_t> error_len;
+};
+
 struct utf8_error : std::exception {
   size_t valid_to;
   std::optional<size_t> error_len;
+
+  utf8_error(literal_error error) noexcept /* for beaut fmt */
+      : valid_to(error.valid_to), error_len(error.error_len) {}
 
   utf8_error(size_t valid_to, std::optional<size_t> error_len) noexcept
       : valid_to(valid_to), error_len(error_len) {}
@@ -39,15 +48,14 @@ struct utf8_error : std::exception {
   }
 };
 
-// we don't need extra-fast algorithm because it is usually used only in consteval
-constexpr auto validate(std::string_view str) noexcept -> std::optional<utf8_error> {
+constexpr auto validate(std::string_view str) noexcept -> std::optional<literal_error> {
   using some = std::optional<size_t>;
 
   auto idx = str.begin();
   while (idx != str.end()) {
     auto $old_offset = size_t(idx - str.begin());
 
-#define ERROR($error_len) return std::optional(utf8_error{$old_offset, $error_len})
+#define ERROR($error_len) return std::optional(literal_error{$old_offset, $error_len})
 #define NEXT_IN($var)     \
   idx++;                  \
   if (idx >= str.end()) { \

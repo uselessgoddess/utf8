@@ -15,7 +15,7 @@ TEST(operators, plus) {
 
 TEST(operators, plus_assign) {
   auto str = utf8::string("/* ");
-  auto ch = char_t("\u0306");
+  char_t ch = u'\u0306';
 
   str += "comment";
   str += " */";

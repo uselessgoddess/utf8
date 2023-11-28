@@ -8,6 +8,8 @@ namespace views = std::views;
 namespace ranges = std::ranges;
 using utf8::char_t;
 
+using namespace utf8::literals;
+
 TEST(access, push_pop) {
   constexpr utf8::string_view text = R"(
     Bei Nacht im Dorf der Wächter rief: Elfe!
@@ -65,7 +67,6 @@ TEST(access, starts_ends_with) {
 TEST(access, find_first_last) {
   constexpr auto N = std::string_view::npos;
 
-  // projection from cppreference
   // clang-format off
   static_assert(
       1 == utf8::string_view("alignas").find_first_of("klmn") &&
@@ -74,6 +75,15 @@ TEST(access, find_first_last) {
       //
       1 == utf8::string_view("co_await").substr(4).find_first_of("cba")
       //                           └────────────────────────────────┘
+  );
+
+  static_assert(
+      5 == "delete"sv.find_last_of("cdef") &&
+      //         └────────────────────┘
+      N == "double"sv.find_last_of("fghi") &&
+      //
+      3 == "extern"sv.find_last_of("e")
+      //       └────────────────────┘
   );
   // clang-format on
 
@@ -84,5 +94,25 @@ TEST(access, find_first_last) {
   ASSERT_EQ(2 * len, str.find_first_of("🏽🏽🏾"));
   ASSERT_EQ(len, str.substr(len).find_first_of("🏽🏽🏾"));
   ASSERT_EQ(0, str.substr(len).find_first_not_of("🏽🏽🏾"));
+}
 
+struct on {
+  ~on() {
+    std::cout << "on-exit\n";
+  }
+};
+
+int foo(utf8::string_view) {
+  std::cout << "exit\n";
+  return 1;
+}
+
+TEST(access, starts_ends) {
+  ASSERT_TRUE(""sv.starts_with(""));
+
+  ASSERT_TRUE("👈🏾"sv.starts_with("👈"));
+  ASSERT_TRUE("👈🏾"sv.starts_with(U'👈'));
+
+  ASSERT_TRUE("👈🏾"sv.ends_with("🏾"));
+  ASSERT_TRUE("👈🏾"sv.ends_with(U'🏾'));
 }

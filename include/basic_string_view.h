@@ -39,10 +39,7 @@ class basic_string_view {
   // template <typename Alloc>
   // constexpr basic_string_view(basic_string<Alloc>&&) = delete;
 
-  consteval basic_string_view(noexport::unsafe_t, const char* str, size_t len) immutable
-      : _inner(str, len) {
-    const_validate(std::string_view(str, len));
-  }
+  constexpr basic_string_view(noexport::unsafe_t, std::string_view str) immutable : _inner(str) {}
 
   template <size_t N>
   consteval basic_string_view(const char (&lit)[N]) immutable : _inner(lit, N - 1) {
@@ -113,8 +110,7 @@ class basic_string_view {
 
     auto sv_check = [this](size_t index) {
       if (not is_boundary(index)) {
-        throw std::out_of_range(
-            (std::stringstream() << "index `" << index << "` is not UTF-8 char header").str());
+        throw std::out_of_range(std::format("index `{}` is not UTF-8 character point", index));
       }
     };
     sv_check(pos);
@@ -187,15 +183,18 @@ namespace literals {
 #pragma clang diagnostic ignored "-Wliteral-suffix"
 
 consteval auto operator"" u(const char* str, size_t len) -> string_view {
-  return {noexport::unsafe, str, len};
+  const_validate(str);
+  return {noexport::unsafe, std::string_view(str, len)};
 }
 
 consteval auto operator"" U(const char* str, size_t len) -> string_view {
-  return {noexport::unsafe, str, len};
+  const_validate(str);
+  return {noexport::unsafe, std::string_view(str, len)};
 }
 
 consteval auto operator""sv(const char* str, size_t len) -> string_view {
-  return {noexport::unsafe, str, len};
+  const_validate(str);
+  return {noexport::unsafe, std::string_view(str, len)};
 }
 
 #pragma GCC diagnostic pop

@@ -18,6 +18,13 @@ struct char_t {
   constexpr char_t(const char_t&) = default;
   constexpr ~char_t() = default;
 
+  consteval char_t(noexport::unsafe_t, std::string_view str);
+
+  // is consteval - allow only string literals
+  template <size_t N>
+  explicit consteval char_t(const char (&lit)[N])
+      : char_t(noexport::unsafe, std::string_view(lit)) {}
+
   constexpr char_t(char c) noexcept : inner(std::uint8_t(c)) {}
   constexpr char_t(char8_t c) noexcept : inner(c) {}
 
@@ -32,10 +39,6 @@ struct char_t {
   explicit constexpr operator T() const noexcept {
     return static_cast<T>(inner);
   }
-
-  // is consteval - allow only string literals
-  template <size_t N>
-  explicit consteval char_t(const char (&lit)[N]) noexcept;
 
   constexpr static auto from(std::uint32_t c) noexcept -> std::optional<char_t> {
     if (noexport::is_valid_code(c)) {
@@ -70,6 +73,11 @@ namespace literals {
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wliteral-suffix"
+
+consteval auto operator"" c(const char* str, size_t len) -> char_t {
+  const_validate(str);
+  return {noexport::unsafe, std::string_view(str, len)};
+}
 
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
